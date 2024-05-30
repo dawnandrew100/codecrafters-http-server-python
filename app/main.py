@@ -80,7 +80,7 @@ def requestHandler(conn):
         elif method == "POST":
             try:
                 with open(file_path, "wb") as file:
-                    file.write(body)
+                    file.write(body.encode("utf-8"))
                 response = responseBuilder(CREATED, "application/octet-stream", len(body), body).encode("utf-8")
             except Exception as e:
                 print(f"Error: Reading/{file_path} failed. Exception: {e}")
