@@ -50,7 +50,7 @@ def requestHandler(conn):
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
     elif "user-agent" in path:
         response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
-    elif "files" in path:
+    elif "files" in path and method == "GET":
         directory = sys.argv[2]
         filename = path.split("/")[2]
         file_path = f"{directory}/{filename}"
