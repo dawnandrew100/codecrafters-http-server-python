@@ -1,5 +1,6 @@
 import socket
 import threading
+import sys
 
 HOST = "localhost"
 PORT = 4221
@@ -49,6 +50,16 @@ def requestHandler(conn):
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
     elif "user-agent" in path:
         response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
+    elif "files" in path:
+        directory = sys.argv[2]
+        filename = path.split("/")[2]
+        file_path = f"{directory}/{filename}"
+        try:
+            with open(file_path, "r") as file:
+                file_contents = file.read()
+            response = responseBuilder(OK, "application/octet-stream", len(file_contents), file_contents)
+        except Exception as e:
+            print(f"Error: Reading/{file_path} failed. Exception: {e}")
     
     conn.send(response)
     conn.close() 
