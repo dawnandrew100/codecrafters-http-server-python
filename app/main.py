@@ -46,22 +46,26 @@ def requestHandler(conn):
     # get buffer
     buffer = conn.recv(1024).decode("utf-8")
     print(buffer)
-
+    
     req = parseRequest(buffer)
+    method = req["method"]
+    path = req["path"]
+    headers = req["headers"]
+    
 
     response = f"{NOT_FOUND}\r\n".encode("utf-8")
 
-    if req["path"] == "/":
+    if path == "/":
         response = f"{OK}\r\n".encode("utf-8")
-    elif "echo" in req["path"]:
-        path_echo = req["path"].split("/")
+    elif "echo" in path:
+        path_echo = path.split("/")
         echo_text = path_echo[2]
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
-    elif "user-agent" in req["path"]:
-        response = responseBuilder(OK, "text/plain", len(req["headers"]["User-Agent"]), req["headers"]["User-Agent"]).encode("utf-8")
-    elif "files" in req["path"] and req["method"] == "GET":
+    elif "user-agent" in path:
+        response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
+    elif "files" in path and method == "GET":
         directory = sys.argv[2]
-        filename = req["path"].split("/")[2]
+        filename = path.split("/")[2]
         file_path = f"{directory}/{filename}"
         try:
             with open(file_path, "r") as file:
