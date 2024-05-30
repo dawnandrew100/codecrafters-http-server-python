@@ -12,10 +12,13 @@ def main():
     conn, addr = server_socket.accept() # wait for client
     print("Received connection from", addr[0], "port", addr[1])
     
-    # get data
-    data = conn.recv(1024).decode("utf-8")
-    print(data)
-    path = data.split(" ")[1]
+    # get request
+    request = conn.recv(1024).decode("utf-8")
+    print(request)
+    request_split = request.split("\r\n")
+    request_line = request_split[0].split(" ")
+    path = request_line[1]
+
     if path == "/":
         conn.send(b"HTTP/1.1 200 OK\r\n\r\n")
     else:
