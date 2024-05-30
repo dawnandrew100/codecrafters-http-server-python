@@ -17,7 +17,18 @@ def main():
     print(request)
     request_split = request.split("\r\n")
     request_line = request_split[0].split(" ")
+    
+    method = request_line[0]
     path = request_line[1]
+    version = request_line[2]
+
+    headers = {}
+    header = request_split[1:len(request_split)-2]
+    for h in header:
+        hs = h.split(": ")
+        headers[hs[0]] = hs[1]
+
+    body = request.split("\r\n\r\n")[1]
 
     if path == "/":
         conn.send(b"HTTP/1.1 200 OK\r\n\r\n")
