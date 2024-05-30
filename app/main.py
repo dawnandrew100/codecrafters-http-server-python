@@ -33,16 +33,16 @@ def main():
 
     body = buffer.split("\r\n\r\n")[1]
 
+    response = f"{NOT_FOUND}\r\n".encode("utf-8")
+
     if path == "/":
-        conn.send(b"HTTP/1.1 200 OK\r\n\r\n")
+        response = f"{OK}\r\n".encode("utf-8")
     elif "echo" in path:
         path_echo = path.split("/")
         echo_text = path_echo[2]
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
-        conn.send(response)
-    else:
-        conn.send(b"HTTP/1.1 404 Not Found\r\n\r\n")
     
+    conn.send(response)
     conn.close()
 
 def responseBuilder(statusLine:str , contentType: str, contentLength: int, body: str) -> str:
