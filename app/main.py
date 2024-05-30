@@ -27,8 +27,7 @@ def main():
 
 def parseRequest(buf):
     request = buf.split("\r\n")
-    request_line = request[0].split(" ")
-    
+    request_line = request[0].split(" ") 
 
     headers = {}
     header = request[1:len(request)-2]
