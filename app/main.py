@@ -7,6 +7,8 @@ PORT = 4221
 
 OK = "HTTP/1.1 200 OK\r\n"
 NOT_FOUND = "HTTP/1.1 404 Not Found\r\n"
+BAD_REQUEST = "HTTP/1.1 400 Bad Request\r\n\r\n"
+CREATED     = "HTTP/1.1 201 Created\r\n"
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -51,6 +53,7 @@ def requestHandler(conn):
     method = req["method"]
     path = req["path"]
     headers = req["headers"]
+    body = req["body"]
     
 
     response = f"{NOT_FOUND}\r\n".encode("utf-8")
@@ -63,16 +66,25 @@ def requestHandler(conn):
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
     elif path.startswith("/user-agent"):
         response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
-    elif path.startswith("/files/") and method == "GET":
+    elif path.startswith("/files/"):
         directory = sys.argv[2]
         filename = path.split("/")[2]
         file_path = f"{directory}/{filename}"
-        try:
-            with open(file_path, "r") as file:
-                file_contents = file.read()
-            response = responseBuilder(OK, "application/octet-stream", len(file_contents), file_contents).encode("utf-8")
-        except Exception as e:
-            print(f"Error: Reading/{file_path} failed. Exception: {e}")
+        if method == "GET":
+            try:
+                with open(file_path, "r") as file:
+                    file_contents = file.read()
+                response = responseBuilder(OK, "application/octet-stream", len(file_contents), file_contents).encode("utf-8")
+            except Exception as e:
+                print(f"Error: Reading/{file_path} failed. Exception: {e}")
+        elif method == "POST":
+            try:
+                with open(file_path, "wb") as file:
+                    file.write(body)
+                response = responseBuilder(CREATED, "application/octet-stream", len(body), body).encode("utf-8")
+            except Exception as e:
+                print(f"Error: Reading/{file_path} failed. Exception: {e}")
+
     
     conn.send(response)
     conn.close() 
