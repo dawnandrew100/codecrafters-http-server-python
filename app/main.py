@@ -17,7 +17,7 @@ def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
-    
+    # creates server listening on specific port    
     server_socket = socket.create_server((HOST, PORT), reuse_port=True)
     print("Waiting for connection")
     while True: # while loop enables threading (multiple requests)
@@ -75,6 +75,7 @@ def requestHandler(conn):
             encoding = encoded[0] # encoding becomes whatever the first accepted encoding is
             if encoding == "gzip":
                 echo_text = gzip.compress(echo_text.encode("utf-8"))
+            # friendly reminder to future Andrew to not double encode compression messages (echo_text)
             response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text)).encode("utf-8") + echo_text
         else:
             response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
