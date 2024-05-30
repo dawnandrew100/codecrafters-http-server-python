@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+import gzip
 
 HOST = "localhost"
 PORT = 4221
@@ -19,13 +20,14 @@ def main():
     
     server_socket = socket.create_server((HOST, PORT), reuse_port=True)
     print("Waiting for connection")
-    while True:
-        connection, addr = server_socket.accept() # wait for client
+    while True: # while loop enables threading (multiple requests)
+        connection, addr = server_socket.accept()
         print("Received connection from", addr[0], "port", addr[1])
         t = threading.Thread(target=lambda: requestHandler(connection))
         t.start()
 
 def parseRequest(buf):
+    # HTTP request divided into request line, headers, and body separated by CRLF
     request = buf.split("\r\n")
     request_line = request[0].split(" ") 
 
@@ -35,8 +37,8 @@ def parseRequest(buf):
         hs = h.split(": ")
         headers[hs[0]] = hs[1]
 
-    body = buf.split("\r\n\r\n")[1]
-    
+    body = buf.split("\r\n\r\n")[1]  # body is separated from headers by 2 CRLF
+     
     Request = {
             "method": request_line[0],
             "path": request_line[1],
@@ -47,7 +49,7 @@ def parseRequest(buf):
     return Request
 
 def requestHandler(conn):
-    # get buffer
+    # get buffer from connection
     buffer = conn.recv(1024).decode("utf-8")
     print(buffer)
     
@@ -57,22 +59,29 @@ def requestHandler(conn):
     headers = req["headers"]
     body = req["body"]
     
-
+    # default response is 404 not found
     response = f"{NOT_FOUND}\r\n".encode("utf-8")
 
     if path == "/":
         response = f"{OK}\r\n".encode("utf-8")
+
     elif path.startswith("/echo"):
         path_echo = path.split("/")
         echo_text = path_echo[2]
+        # any generator used to check if ACCEPTED_ENCODINGS exists anywhere within the Accept-Encoding header string
         if "Accept-Encoding" in headers and any(encoding in headers["Accept-Encoding"] for encoding in ACCEPTED_ENCODINGS):
+            # list comprehension to minimise if branch layers
             encoded = [encoder for encoder in headers["Accept-Encoding"].split(", ") if(encoder in ACCEPTED_ENCODINGS)]
-            encoding = encoded[0]
+            encoding = encoded[0] # encoding becomes whatever the first accepted encoding is
+            if encoding == "gzip":
+                echo_text = gzip.compress(echo_text)
             response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text), echo_text).encode("utf-8")
         else:
             response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
+    
     elif path.startswith("/user-agent"):
         response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
+    
     elif path.startswith("/files/"):
         directory = sys.argv[2]
         filename = path.split("/")[2]
@@ -92,14 +101,14 @@ def requestHandler(conn):
             except Exception as e:
                 print(f"Error: Reading/{file_path} failed. Exception: {e}")
 
-    
+    # response variable must be bytes type (.encode("utf-8") 
     conn.send(response)
     conn.close() 
 
 def responseBuilder(statusLine: str, contentType: str, contentLength: int, body: str) -> str:
     return f"{statusLine}Content-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
 
-def compressedResponseBuilder(statusLine: str, encoding: str, contentType: str, contentLength: int, body: str) -> str:
+def compressedResponseBuilder(statusLine: str, encoding: str, contentType: str, contentLength: int, body: str | bytes) -> str:
     return f"{statusLine}Content-Encoding: {encoding}\r\nContent-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
 
 if __name__ == "__main__":
