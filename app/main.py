@@ -57,7 +57,7 @@ def requestHandler(conn):
         try:
             with open(file_path, "r") as file:
                 file_contents = file.read()
-            response = responseBuilder(OK, "application/octet-stream", len(file_contents), file_contents)
+            response = responseBuilder(OK, "application/octet-stream", len(file_contents), file_contents).encode("utf-8")
         except Exception as e:
             print(f"Error: Reading/{file_path} failed. Exception: {e}")
     
