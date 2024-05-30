@@ -1,4 +1,5 @@
 import socket
+import threading
 
 HOST = "localhost"
 PORT = 4221
@@ -6,15 +7,7 @@ PORT = 4221
 OK = "HTTP/1.1 200 OK\r\n"
 NOT_FOUND = "HTTP/1.1 404 Not Found\r\n"
 
-def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-
-    
-    server_socket = socket.create_server((HOST, PORT), reuse_port=True)
-    conn, addr = server_socket.accept() # wait for client
-    print("Received connection from", addr[0], "port", addr[1])
-    
+def requestHandler(conn):
     # get buffer
     buffer = conn.recv(1024).decode("utf-8")
     print(buffer)
@@ -46,6 +39,19 @@ def main():
     
     conn.send(response)
     conn.close()
+
+def main():
+    # You can use print statements as follows for debugging, they'll be visible when running tests.
+    print("Logs from your program will appear here!")
+
+    
+    server_socket = socket.create_server((HOST, PORT), reuse_port=True)
+    print("Waiting for connection")
+    connection, addr = server_socket.accept() # wait for client
+    print("Received connection from", addr[0], "port", addr[1])
+    t = threading.Thread(target=lambda: requestHandler(connection))
+    t.start()
+    
 
 def responseBuilder(statusLine:str , contentType: str, contentLength: int, body: str) -> str:
     return f"{statusLine}Content-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
