@@ -1,3 +1,5 @@
+[![progress-banner](https://backend.codecrafters.io/progress/http-server/14239791-107f-4489-a39c-7f1f0a481e7b)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+
 # Message from Code Crafters
 
 This is a starting point for Python solutions to the
