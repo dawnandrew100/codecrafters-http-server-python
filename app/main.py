@@ -10,10 +10,18 @@ def main():
     
     server_socket = socket.create_server((HOST, PORT), reuse_port=True)
     conn, addr = server_socket.accept() # wait for client
-    with conn:
-        print(f"Connected by {addr}")
+    print("Received connection from", addr[0], "port", addr[1])
+    
+    # get data
+    data = conn.recv(1024).decode("utf-8")
+    print(data)
+    path = data.split(" ")[1]
+    if path == "/":
         conn.send(b"HTTP/1.1 200 OK\r\n\r\n")
-        conn.close()
+    else:
+        conn.send(b"HTTP/1.1 404 Not Found\r\n\r\n")
+    
+    conn.close()
 
 if __name__ == "__main__":
     main()
