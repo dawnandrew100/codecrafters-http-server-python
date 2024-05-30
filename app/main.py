@@ -65,8 +65,13 @@ def requestHandler(conn):
     elif path.startswith("/echo"):
         path_echo = path.split("/")
         echo_text = path_echo[2]
-        if "Accept-Encoding" in headers and ACCEPTED_ENCODINGS in headers["Accept-Encoding"]:
-            response = compressedResponseBuilder(OK, headers["Accept-Encoding"], "text/plain", len(echo_text), echo_text).encode("utf-8")
+        if "Accept-Encoding" in headers:
+            for encoding in ACCEPTED_ENCODINGS:
+                if encoding in headers["Accept-Encoding"]:
+                    response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text), echo_text).encode("utf-8")
+                    break
+                else:
+                    response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
         else:
             response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
     elif path.startswith("/user-agent"):
