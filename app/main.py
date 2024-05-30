@@ -75,7 +75,7 @@ def requestHandler(conn):
             encoding = encoded[0] # encoding becomes whatever the first accepted encoding is
             if encoding == "gzip":
                 echo_text = gzip.compress(echo_text.encode())
-            response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text), echo_text).encode("utf-8")
+            response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text), echo_text).encode()
         else:
             response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
     
