@@ -10,6 +10,8 @@ NOT_FOUND = "HTTP/1.1 404 Not Found\r\n"
 BAD_REQUEST = "HTTP/1.1 400 Bad Request\r\n\r\n"
 CREATED     = "HTTP/1.1 201 Created\r\n"
 
+ACCEPTED_ENCODINGS = ["gzip"]
+
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
@@ -22,6 +24,7 @@ def main():
         print("Received connection from", addr[0], "port", addr[1])
         t = threading.Thread(target=lambda: requestHandler(connection))
         t.start()
+
 def parseRequest(buf):
     request = buf.split("\r\n")
     request_line = request[0].split(" ")
@@ -63,7 +66,10 @@ def requestHandler(conn):
     elif path.startswith("/echo"):
         path_echo = path.split("/")
         echo_text = path_echo[2]
-        response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
+        if headers["Accept-Encoding"] in ACCEPTED_ENCODINGS:
+            response = compressedResponseBuilder(OK, headers["Accept-Encoding"], "text/plain", len(echo_text), echo_text).encode("utf-8")
+        else:
+            response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
     elif path.startswith("/user-agent"):
         response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
     elif path.startswith("/files/"):
@@ -89,8 +95,11 @@ def requestHandler(conn):
     conn.send(response)
     conn.close() 
 
-def responseBuilder(statusLine:str , contentType: str, contentLength: int, body: str) -> str:
+def responseBuilder(statusLine: str, contentType: str, contentLength: int, body: str) -> str:
     return f"{statusLine}Content-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
+
+def compressedResponseBuilder(statusLine: str, encoding: str, contentType: str, contentLength: int, body: str) -> str:
+    return f"{statusLine}Content-Encoding: {encoding}\r\nContent-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
 
 if __name__ == "__main__":
     main()
