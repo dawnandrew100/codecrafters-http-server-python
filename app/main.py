@@ -20,17 +20,10 @@ def main():
         print("Received connection from", addr[0], "port", addr[1])
         t = threading.Thread(target=lambda: requestHandler(connection))
         t.start()
-
-def requestHandler(conn):
-    # get buffer
-    buffer = conn.recv(1024).decode("utf-8")
-    print(buffer)
-    request = buffer.split("\r\n")
+def parseRequest(buf):
+    request = buf.split("\r\n")
     request_line = request[0].split(" ")
     
-    method = request_line[0]
-    path = request_line[1]
-    version = request_line[2]
 
     headers = {}
     header = request[1:len(request)-2]
@@ -38,21 +31,37 @@ def requestHandler(conn):
         hs = h.split(": ")
         headers[hs[0]] = hs[1]
 
-    body = buffer.split("\r\n\r\n")[1]
+    body = buf.split("\r\n\r\n")[1]
+    
+    Request = {
+            "method": request_line[0],
+            "path": request_line[1],
+            "version": request_line[2],
+            "headers":headers,
+            "body": body
+            }
+    return Request
+
+def requestHandler(conn):
+    # get buffer
+    buffer = conn.recv(1024).decode("utf-8")
+    print(buffer)
+
+    req = parseRequest(buffer)
 
     response = f"{NOT_FOUND}\r\n".encode("utf-8")
 
-    if path == "/":
+    if req["path"] == "/":
         response = f"{OK}\r\n".encode("utf-8")
-    elif "echo" in path:
-        path_echo = path.split("/")
+    elif "echo" in req["path"]:
+        path_echo = req["path"].split("/")
         echo_text = path_echo[2]
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
-    elif "user-agent" in path:
-        response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
-    elif "files" in path and method == "GET":
+    elif "user-agent" in req["path"]:
+        response = responseBuilder(OK, "text/plain", len(req["headers"]["User-Agent"]), req["headers"]["User-Agent"]).encode("utf-8")
+    elif "files" in req["path"] and req["method"] == "GET":
         directory = sys.argv[2]
-        filename = path.split("/")[2]
+        filename = req["path"].split("/")[2]
         file_path = f"{directory}/{filename}"
         try:
             with open(file_path, "r") as file:
