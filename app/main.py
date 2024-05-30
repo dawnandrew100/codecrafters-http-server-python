@@ -57,11 +57,11 @@ def requestHandler(conn):
 
     if path == "/":
         response = f"{OK}\r\n".encode("utf-8")
-    elif "echo" in path:
+    elif path.startswith("/echo"):
         path_echo = path.split("/")
         echo_text = path_echo[2]
         response = responseBuilder(OK,"text/plain",len(echo_text),echo_text).encode("utf-8")
-    elif "user-agent" in path:
+    elif path.startswith("/user-agent"):
         response = responseBuilder(OK, "text/plain", len(headers["User-Agent"]), headers["User-Agent"]).encode("utf-8")
     elif path.startswith("/files/") and method == "GET":
         directory = sys.argv[2]
