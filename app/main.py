@@ -74,9 +74,8 @@ def requestHandler(conn):
             encoded = [encoder for encoder in headers["Accept-Encoding"].split(", ") if(encoder in ACCEPTED_ENCODINGS)]
             encoding = encoded[0] # encoding becomes whatever the first accepted encoding is
             if encoding == "gzip":
-                print(echo_text)
-                echo_text = gzip.compress(echo_text.encode())
-            response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text), echo_text).encode()
+                echo_text = gzip.compress(echo_text.encode("utf-8"))
+            response = compressedResponseBuilder(OK, encoding, "text/plain", len(echo_text)).encode("utf-8") + echo_text
         else:
             response = responseBuilder(OK, "text/plain", len(echo_text), echo_text).encode("utf-8")
     
@@ -109,8 +108,8 @@ def requestHandler(conn):
 def responseBuilder(statusLine: str, contentType: str, contentLength: int, body: str) -> str:
     return f"{statusLine}Content-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
 
-def compressedResponseBuilder(statusLine: str, encoding: str, contentType: str, contentLength: int, body: str | bytes) -> str:
-    return f"{statusLine}Content-Encoding: {encoding}\r\nContent-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n{body}"
+def compressedResponseBuilder(statusLine: str, encoding: str, contentType: str, contentLength: int) -> str:
+    return f"{statusLine}Content-Encoding: {encoding}\r\nContent-Type: {contentType}\r\nContent-Length: {contentLength}\r\n\r\n"
 
 if __name__ == "__main__":
     main()
