@@ -11,12 +11,9 @@ NOT_FOUND = "HTTP/1.1 404 Not Found\r\n"
 BAD_REQUEST = "HTTP/1.1 400 Bad Request\r\n\r\n"
 CREATED     = "HTTP/1.1 201 Created\r\n"
 
-ACCEPTED_ENCODINGS = ["gzip"]
+ACCEPTED_ENCODINGS = ("gzip",)
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-
     # creates server listening on specific port    
     server_socket = socket.create_server((HOST, PORT), reuse_port=True)
     print("Waiting for connection")
